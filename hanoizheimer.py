@@ -105,7 +105,7 @@ class Chip():
 
     def __init__(self, size):
         """
-        :param: size. Un nombre entier strictement positif.
+        :param size: Un nombre entier strictement positif.
         """
         self.size = size
 
@@ -115,7 +115,7 @@ class Mast():
 
     def __init__(self, mast_type):
         """
-        :param: mast_type. Le type du poteau. MAST_START / MAST_INTERM / MAST_END.
+        :param mast_type: Le type du poteau. MAST_START / MAST_INTERM / MAST_END.
         """
         # Liste des disques empilés sur le poteau. Ne contient que des objets de classe Chip.
         # L'élément d'indice 0 est le disque tout en bas. L'élément d'indice 1 est le disque
@@ -160,57 +160,57 @@ class Mast():
             # Pas de disque sur ce poteau.
             return None
 
-    def getChip(self, index_floor):
-        """ retourne un disque placé à un certain étage de la tour.
-        :param: index_floor. Entier positif ou nul, indiquant l'étage du disque
-        qu'on veut récupérer. (Étage 0 = tout en bas).
-        Valeurs de retour : un objet Chip,
-        Ou bien la valeur None (il n'y a pas de disque à l'étage demandé) """
-
+    def get_chip(self, index_floor):
+        """
+        Retourne un disque placé à un certain étage de la tour.
+        :param index_floor: Entier positif ou nul, indiquant l'étage du disque à récupérer.
+        (Étage 0 = tout en bas).
+        :return: un objet Chip, ou None si les disques ne vont pas jusqu'à l'étage demandé.
+        """
         if index_floor < len(self._chips):
-            # il y a un disque à l'étage demandé. On le renvoie
+            # Il y a un disque à l'étage demandé. On le renvoie
             return self._chips[index_floor]
         else:
-            # pas de disque à l'étage demandé. (La tour est pas assez haute).
+            # Pas de disque à l'étage demandé. (Pas assez de disque sur le poteau).
             return None
 
-    def popChip(self):
-        """ enlève le disque du haut de ce poteau, et le renvoie.
-        Valeurs de retour : un objet Chip. (le disque qu'on vient d'enlever)
-        Si le poteau n'a pas de disque, cette fonction fait tout planter. (Et c'est fait exprès)
+    def pop_chip(self):
         """
-        if len(self._chips) != 0:
-            # Il y a au moins un disque sur ce poteau. On enlève le dernier élément de la liste
-            # (le disque du haut), et on le renvoie.
+        Enlève le disque placé en haut du poteau, et le retourne.
+        :return: un objet Chip.
+        Lève une exception si le poteau n'a aucun disque.
+        """
+        if self._chips:
+            # Il y a au moins un disque sur ce poteau.
+            # On enlève le dernier élément de la liste (le disque du haut), et on le renvoie.
             return self._chips.pop()
         else:
-            # Pas de disque sur ce poteau. On fait tout planter.
-            print("!!! ILLEGAL MOVE !!! poteau vide : ", self.mast_type)
-            assert False
+            # Pas de disque sur ce poteau.
+            raise Exception("Illegal move. Poteau vide : %s" % self.mast_type)
 
-    def addChip(self, chipToAdd):
-        """ ajoute un nouveau disque en haut de ce poteau.
-        chipToAdd doit être un objet Chip.
-        La taille des disques est contrôlée. Si le disque qu'on tente d'ajouter est plus
-        grand que le disque se trouvant actuellement en haut du poteau, cette fonction
-        fait tout planter. (Et c'est fait exprès aussi). """
+    def add_chip(self, chip_to_add):
+        """
+        Ajoute un nouveau disque en haut du poteau. La taille des disques est contrôlée.
+        :param chip_to_add: un objet Chip.
+        Lève une exception si le disque qu'on tente d'ajouter est plus grand
+        que le disque se trouvant actuellement en haut du poteau.
+        """
 
         # Récupération du disque actuellement en haut du poteau.
-        topChip = self.get_top_chip()
-        if topChip is None:
-            # Pas de disque sur ce poteau. Donc on peut ajouter le nouveau disque sans problème.
-            # Le nouveau disque va se mettre à l'indice 0 de self._chips (tout en bas).
-            self._chips.append(chipToAdd)
-        elif topChip.size > chipToAdd.size:
-            # Il y a un ou des disques sur ce poteau. Le disque a ajouter à une taille plus petite
-            # que le disque en haut du poteau. On peut ajouter le nouveau disque.
-            self._chips.append(chipToAdd)
+        top_chip = self.get_top_chip()
+        if top_chip is None:
+            # Pas de disque sur le poteau. On peut ajouter le nouveau disque sans problème.
+            self._chips.append(chip_to_add)
+        elif top_chip.size > chip_to_add.size:
+            # Il y a des disques sur le poteau. Le disque à ajouter à une taille plus petite
+            # que celui qui est en haut du poteau. On peut donc l'ajouter.
+            self._chips.append(chip_to_add)
         else:
-            # Le disque a ajouter à une taille plus grande que le disque en haut du poteau.
-            # On fait tout planter.
-            print("!!! ILLEGAL MOVE !!! poteau : ", self.mast_type)
-            print("chip: ", topChip.size, " chip to add : ", chipToAdd.size)
-            assert False
+            # Le disque a ajouter à une taille plus grande que celui en haut du poteau.
+            # On lève une exception.
+            exc_msg = "Illegal move. Poteau: %s. Chip: %s. chip to add: %s."
+            exc_data = (self.mast_type, top_chip.size, chip_to_add.size)
+            raise Exception(exc_msg % exc_data)
 
 
 class HanoiGame():
@@ -234,7 +234,7 @@ class HanoiGame():
         # Jusqu'au plus petit disque (taille de 1), qui se retrouve tout en haut.
         for chipSize in range(self.nbrChip, 0, -1):
             chip = Chip(chipSize)
-            self.mastStart.addChip(chip)
+            self.mastStart.add_chip(chip)
 
     def moveChip(self, mastSource, mastDest):
         """ déplace un disque du poteau mastSource, vers le poteau mastDest.
@@ -245,9 +245,9 @@ class HanoiGame():
 
         # Récupération du disque se trouvant tout en haut du poteau source.
         # Et en même temps, enlevage de ce disque du poteau source.
-        chipToMove = mastSource.popChip()
+        chipToMove = mastSource.pop_chip()
         # Placement du disque récupéré, sur le poteau de destination.
-        mastDest.addChip(chipToMove)
+        mastDest.add_chip(chipToMove)
 
 
 class HanoiSolver():
@@ -297,7 +297,7 @@ class HanoiSolver():
 
                 mast, cursor = mastCursor
                 # Pour chaque poteau, on regarde uniquement le disque pointé par son curseur.
-                chip = mast.getChip(cursor)
+                chip = mast.get_chip(cursor)
 
                 if chip is not None:
                     # Pour le poteau en cours, et pour le curseur en cours, un disque est présent.
@@ -601,7 +601,7 @@ class ListMastDisplayer():
 
             # Pour un étage, on prend tous les poteaux un par un, et on récupère la chaîne
             # de caractère représentant cet étage de ce poteau. (Qui contient un disque, ou pas)
-            listStrChip = [ self.strChip(mast.getChip(floorIndex))
+            listStrChip = [ self.strChip(mast.get_chip(floorIndex))
                             for mast in self.listMast ]
 
             # On concatène ces chaînes de caractère, avec quelques espaces entre,
