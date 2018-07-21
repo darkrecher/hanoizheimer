@@ -481,17 +481,17 @@ class HanoiSolver():
         mast_dest = masts_with_size[index_mast_dest][0]
         return mast_source, mast_dest
 
-    def determineNextChipMovement(self):
-        """ Détermine le prochain coup à jouer, en fonction de la situation de jeu
+    def determine_next_movement(self):
+        """
+        Détermine le prochain coup à jouer, en fonction de la situation de jeu
         définie dans self.hanoi_game.
-        Valeur de retour :
-         - Soit la valeur None. Dans ce cas, le jeu est déjà fini,
-           et tous les disques sont correctement rangés sur le poteau de fin.
-         - Soit un tuple de 4 éléments :
-            * nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
-            * moveType. Type de mouvement à faire. Une valeur de type Movement.*.
-            * Mast_source : le poteau de source, pour le prochain mouvement à jouer
-            * Mast_dest : le poteau de destination, pour le prochain mouvement à jouer. """
+        :return: Soit None, si le jeu est fini et que tous les disques sont sur le poteau de fin,
+        soit un tuple de 4 éléments :
+         - nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
+         - move_type. Type de mouvement à faire. Une valeur de type Movement.*.
+         - mast_source : Objet Mast. le poteau de source, pour le prochain mouvement à jouer
+         - mast_dest : Objet Mast. le poteau de destination, pour le prochain mouvement à jouer.
+        """
 
         #on compte le nombre de coupures
         nb_gaps = self._count_gaps()
@@ -501,24 +501,24 @@ class HanoiSolver():
 
         if nb_gaps & 1 == 0:
             # Le nombre de coupure est pair. Il faut déplacer un disque autre que le petit disque.
-            moveType = Movement.OTHER_CHIP
-            # On peut déterminer immédiatement les poteaux de source et destination.
+            move_type = Movement.OTHER_CHIP
+            # Détermination des poteaux de source et destination.
             mast_source, mast_dest = self._determine_other_chip_movement()
         else:
             # Le nombre de coupure est impair. Il faut déplacer le petit disque.
-            # définition du dictionnaire indiquant le sens du mouvement du petit disque,
-            # en fonction d'une parité. 0 : paire. 1 : impaire
+            # Le sens de déplacement de ce disque dépend de la parité du nombre
+            # total de disque dans le jeu.
+            # Si c'est pair : on le déplace vers l'avant.
+            # Si c'est impair : vers l'arrière.
             move_type_from_parity = {
                 0:Movement.TINY_CHIP_FORWARD,
                 1:Movement.TINY_CHIP_BACKWARD,
             }
-            # Le sens du mouvement du petit disque se détermine en fonction de la parité
-            # du nombre total de disque dans le jeu.
-            moveType = move_type_from_parity[self.hanoi_game.nbr_chip & 1]
-            # Détermination des poteaux de source et de destination, pour le petit disque.
-            mast_source, mast_dest = self._determine_tiny_chip_movement(moveType)
+            move_type = move_type_from_parity[self.hanoi_game.nbr_chip & 1]
+            # Détermination des poteaux de source et de destination.
+            mast_source, mast_dest = self._determine_tiny_chip_movement(move_type)
 
-        return (nb_gaps, moveType, mast_source, mast_dest)
+        return (nb_gaps, move_type, mast_source, mast_dest)
 
 
 # --- Les classes de log/affichage/vue. ---
@@ -679,7 +679,7 @@ class TurnDisplayer():
 
     def display(self, nb_gaps, moveType, mast_source, mast_dest):
         """ Affiche la description d'un coup joué. Le blabla est balancé sur la sortie standard.
-        Paramètre : c'est les infos renvoyée par la fonction hanoiSolver.determineNextChipMovement
+        Paramètre : c'est les infos renvoyée par la fonction hanoiSolver.determine_next_movement
          - nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
          - moveType. Type de mouvement effectué. Une valeur de type Movement.*.
          - Mast_source : le poteau de source.
@@ -723,7 +723,7 @@ def solveFullGame(nbChip):
         hanoiSolver = HanoiSolver(hanoi_game)
         # Utilisation de cette classe pour déterminer le prochain coup à jouer,
         # en se basant uniquement sur la situation de jeu actuelle.
-        movementInfo = hanoiSolver.determineNextChipMovement()
+        movementInfo = hanoiSolver.determine_next_movement()
 
         if movementInfo is None:
             # Pas d'info valide concernant le prochain coup à jouer.
