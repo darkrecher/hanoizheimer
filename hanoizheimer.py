@@ -84,8 +84,7 @@ move, turn : un mouvement = un coup = déplacement d'un disque d'un poteau vers 
 gap : une coupure dans l'ordre des disques
 """
 
-import itertools
-
+# TODO : Retrouver le truc avec les "named tuples"
 # Les différentes valeurs possibles pour un type de mouvement.
 (MOVEMENT_OTHER_CHIP, # on doit bouger un disque autre que le plus petit disque
  MOVEMENT_TINY_CHIP_FORWARD, # on doit bouger le plups petit disque, vers l'avant
@@ -99,59 +98,78 @@ import itertools
 ) = range(3)
 
 
+# --- Les classes pour l'algo en lui-même. ---
+
 class Chip():
-    """ un disque du jeu
-    Type MVC : Modèle """
+    """ Un disque du jeu. """
 
     def __init__(self, size):
-        """ fonction constructeur.
-        size doit être un nombre entier strictement positif. """
-
+        """
+        :param: size. Un nombre entier strictement positif.
+        """
         self.size = size
 
 
 class Mast():
-    """ un poteau du jeu. (N'importe lequel des 3).
-    Type MVC : Modèle """
+    """ Un poteau du jeu, n'importe lequel des trois. """
 
-    def __init__(self, mastType):
-        """ fonction constructeur.
-        mastType est le type de poteau : MAST_START, MAST_INTERM ou MAST_END. """
+    def __init__(self, mast_type):
+        """
+        :param: mast_type. Le type du poteau. MAST_START / MAST_INTERM / MAST_END.
+        """
+        # Liste des disques empilés sur le poteau. Ne contient que des objets de classe Chip.
+        # L'élément d'indice 0 est le disque tout en bas. L'élément d'indice 1 est le disque
+        # empilé dessus, etc. Le nombre de disque sur le poteau peut varier.
+        self._chips = []
+        # La variable contenant le type de mât n'est pas utile pour l'algo en lui-même.
+        # Elle sert juste pour logger la description des coups joués.
+        # (voir la classe TurnDisplayer).
+        self.mast_type = mast_type
 
-        # Liste des disques empilés sur le poteau. Cette liste ne contient que des objets Chip.
-        # l'élément d'indice 0 est le disque tout en bas. L'élément d'indice 1 est le disque
-        # empilé dessus, et etc. Le nombre de disque sur le poteau est variable, of course.
-        self.listChip = []
-        # La variable contenant le type de mât ne sert à rien pour l'algo en lui-même,
-        # c'est juste pour différencier les trois mâts, lorsqu'on décrit les coups joués.
-        # (voir la classe TurnDisplayer)
-        self.mastType = mastType
+    def get_nb_chips(self):
+        """
+        :return: nombre entier positif ou nul. Nombre de Chips sur le poteau.
+        """
+        return len(self._chips)
 
-    def getTopChip(self):
-        """ retourne le disque placé tout en haut du poteau.
-        C'est à dire : celui qui est accessible et qu'on peut prendre pour déplacer ailleurs.
-        Valeurs de retour : un objet Chip,
-        Ou bien la valeur None (aucun disque n'a été placé sur ce poteau) """
+    def get_max_size_chips(self):
+        """
+        :return: nombre entier positif ou nul. Size du plus grand Chip sur le poteau.
+        Si le poteau n'a aucune Chip, la fonction renvoie 0.
+        (Le plus logique aurait été de renvoyer None, mais c'est plus simple pour le code
+        extérieur de renvoyer 0).
+        """
+        if self._chips:
+            # Il y a au moins un disque. On renvoie le max.
+            return max([ chip.size for chip in self._chips ])
+        else:
+            # Pas de disque sur ce poteau.
+            return 0
 
-        if len(self.listChip) != 0:
-            # Il y a au moins un disque. On renvoie le dernier élément de la liste de disque,
-            # C'est à dire l'élément le plus haut de la tour.
-            return self.listChip[-1]
+    def get_top_chip(self):
+        """
+        Retourne le disque placé en haut du poteau.
+        C'est à dire, celui qui est accessible et qu'on peut prendre pour déplacer ailleurs.
+        :return: un objet Chip, ou None si pas de disque sur le poteau.
+        """
+        if self._chips:
+            # Il y a au moins un disque. On renvoie le dernier élément de la liste,
+            # c'est à dire le disque le plus haut sur le poteau.
+            return self._chips[-1]
         else:
             # Pas de disque sur ce poteau.
             return None
 
-    def getChip(self, floorIndex):
+    def getChip(self, index_floor):
         """ retourne un disque placé à un certain étage de la tour.
-        (C'est juste un accès 'en lecture'. On n'aura pas le droit de déplacer ce disque).
-        floorIndex est un entier positif ou nul, indiquant l'étage où se trouve le disque
-        qu'on veut récupérer. (étage 0 = tout en bas).
+        :param: index_floor. Entier positif ou nul, indiquant l'étage du disque
+        qu'on veut récupérer. (Étage 0 = tout en bas).
         Valeurs de retour : un objet Chip,
         Ou bien la valeur None (il n'y a pas de disque à l'étage demandé) """
 
-        if floorIndex < len(self.listChip):
+        if index_floor < len(self._chips):
             # il y a un disque à l'étage demandé. On le renvoie
-            return self.listChip[floorIndex]
+            return self._chips[index_floor]
         else:
             # pas de disque à l'étage demandé. (La tour est pas assez haute).
             return None
@@ -161,13 +179,13 @@ class Mast():
         Valeurs de retour : un objet Chip. (le disque qu'on vient d'enlever)
         Si le poteau n'a pas de disque, cette fonction fait tout planter. (Et c'est fait exprès)
         """
-        if len(self.listChip) != 0:
+        if len(self._chips) != 0:
             # Il y a au moins un disque sur ce poteau. On enlève le dernier élément de la liste
             # (le disque du haut), et on le renvoie.
-            return self.listChip.pop()
+            return self._chips.pop()
         else:
             # Pas de disque sur ce poteau. On fait tout planter.
-            print("!!! ILLEGAL MOVE !!! poteau vide : ", self.mastType)
+            print("!!! ILLEGAL MOVE !!! poteau vide : ", self.mast_type)
             assert False
 
     def addChip(self, chipToAdd):
@@ -178,19 +196,19 @@ class Mast():
         fait tout planter. (Et c'est fait exprès aussi). """
 
         # Récupération du disque actuellement en haut du poteau.
-        topChip = self.getTopChip()
+        topChip = self.get_top_chip()
         if topChip is None:
             # Pas de disque sur ce poteau. Donc on peut ajouter le nouveau disque sans problème.
-            # Le nouveau disque va se mettre à l'indice 0 de self.listChip (tout en bas).
-            self.listChip.append(chipToAdd)
+            # Le nouveau disque va se mettre à l'indice 0 de self._chips (tout en bas).
+            self._chips.append(chipToAdd)
         elif topChip.size > chipToAdd.size:
             # Il y a un ou des disques sur ce poteau. Le disque a ajouter à une taille plus petite
             # que le disque en haut du poteau. On peut ajouter le nouveau disque.
-            self.listChip.append(chipToAdd)
+            self._chips.append(chipToAdd)
         else:
             # Le disque a ajouter à une taille plus grande que le disque en haut du poteau.
             # On fait tout planter.
-            print("!!! ILLEGAL MOVE !!! poteau : ", self.mastType)
+            print("!!! ILLEGAL MOVE !!! poteau : ", self.mast_type)
             print("chip: ", topChip.size, " chip to add : ", chipToAdd.size)
             assert False
 
@@ -341,7 +359,7 @@ class HanoiSolver():
         # On recherche le petit disque, en vérifiant le disque qui se trouve
         # tout en haut de chaque poteau.
         for mast in listMast:
-            chip = mast.getTopChip()
+            chip = mast.get_top_chip()
             if chip is not None and chip.size == 1:
                 # On a trouvé le petit disque en haut du poteau en cours.
                 # Donc ce poteau est le poteau de source.
@@ -378,7 +396,7 @@ class HanoiSolver():
 
         # on parcourt la liste des 3 poteaux, pour remplir listMastWithSize
         for mast in listMast:
-            chip = mast.getTopChip()
+            chip = mast.get_top_chip()
             if chip is None:
                 # Le poteau en cours ne contient pas de disque. On l'ajoute à listMastWithSize,
                 # En indiquant None dans le deuxième sous-élément
@@ -463,6 +481,8 @@ class HanoiSolver():
         return (nbGap, moveType, mastSource, mastDest)
 
 
+# --- Les classes de log/affichage/vue. ---
+
 class ListMastDisplayer():
     """ Classe affichant sur la sortie standard une situation de jeu des tours de Hanoï.
     Cette classe est assez permissive. On pourrait avoir autant de poteaux qu'on veut,
@@ -517,18 +537,10 @@ class ListMastDisplayer():
         Elle permet d'initialiser des valeurs internes : dimension des poteaux,
         la taille d'une ligne complète, etc."""
 
-        # Récupération d'une liste contenant tous les disques présents dans le jeu.
-        # (On fait juste une grosse concaténation des listes de disques de chaque poteau.)
-        #listTotalChip = reduce(lambda x, y: x+y,
-        #                       (mast.listChip for mast in self.listMast))
-        listTotalChip = list(itertools.chain(*[
-            mast.listChip for mast in self.listMast
-        ]))
-
-        # Nombre total de disque dans le jeu
-        self.nbTotalChip = len(listTotalChip)
-        # Taille du plus gros disque
-        self.sizeMaxChip = max( [ chip.size for chip in listTotalChip ] )
+        # Nombre total de disque dans le jeu.
+        self.nbTotalChip = sum([ mast.get_nb_chips() for mast in self.listMast ])
+        # Taille du plus gros disque dans le jeu.
+        self.sizeMaxChip = max([ mast.get_max_size_chips() for mast in self.listMast ])
         # Hauteur des poteaux
         self.mastHeight = self.nbTotalChip + self.HEIGHT_MAST_MARGIN
         # Largeur des poteaux (Tous les poteaux doivent pouvoir afficher le plus gros disque).
@@ -637,11 +649,13 @@ class TurnDisplayer():
         print("Nombre de coupures dans l'ordre des disques :", nbGap)
         strMoveType = self.DICT_STR_FROM_MOVEMENT_TYPE[moveType]
         print("Type de mouvement :", strMoveType)
-        strMastSourceType = self.DICT_STR_FROM_MAST_TYPE[mastSource.mastType]
+        strMastSourceType = self.DICT_STR_FROM_MAST_TYPE[mastSource.mast_type]
         print("Poteau source         :", strMastSourceType)
-        strMastDestType = self.DICT_STR_FROM_MAST_TYPE[mastDest.mastType]
+        strMastDestType = self.DICT_STR_FROM_MAST_TYPE[mastDest.mast_type]
         print("Poteau de destination :", strMastDestType)
 
+
+# Les fonctions qui coordonnent tout l'ensemble.
 
 def solveFullGame(nbChip):
     """ Fonction résolvant entièrement un jeu de tour de Hanoï, tout en affichant
@@ -692,10 +706,12 @@ def solveFullGame(nbChip):
         del hanoiSolver
 
 
-if __name__ == "__main__":
-    # Programme principal, comme son nom l'indique. Captain Obvious, oui.
-    # Faut essayer un jeu avec un nombre de disque pair, et un autre avec un nombre impair,
-    # car les deux cas sont pas tout à fait pareil. (le mouvement du petit disque est pas le même)
+def main():
+    """
+    Programme principal, comme son nom l'indique. Captain Obvious, oui.
+    Faut essayer un jeu avec un nombre de disque pair, et un autre avec un nombre impair,
+    car les deux cas sont pas tout à fait pareil. (le mouvement du petit disque est pas le même)
+    """
 
     print("="*79)
     print("Les tours de Hanoi avec 3 disques")
@@ -706,3 +722,8 @@ if __name__ == "__main__":
     print("Les tours de Hanoi avec 4 disques")
     print("="*79)
     solveFullGame(4)
+
+
+if __name__ == "__main__":
+    main()
+
