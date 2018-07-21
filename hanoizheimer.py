@@ -84,18 +84,21 @@ move, turn : un mouvement = un coup = déplacement d'un disque d'un poteau vers 
 gap : une coupure dans l'ordre des disques
 """
 
-# TODO : Retrouver le truc avec les "named tuples"
-# Les différentes valeurs possibles pour un type de mouvement.
-(MOVEMENT_OTHER_CHIP, # on doit bouger un disque autre que le plus petit disque
- MOVEMENT_TINY_CHIP_FORWARD, # on doit bouger le plups petit disque, vers l'avant
- MOVEMENT_TINY_CHIP_BACKWARD, # on doit bouger le plups petit disque, vers l'arrière
-) = range(3)
+from enum import Enum
 
-# Les différentes valeurs possibles pour un type de poteau
-(MAST_START, # le poteau de départ
- MAST_INTERM, # le poteau intermédiaire
- MAST_END, # le poteau de fin
-) = range(3)
+# Les différentes valeurs possibles pour un type de mouvement.
+Movement = Enum('Movement', (
+    'OTHER_CHIP', # on doit bouger un disque autre que le plus petit disque
+    'TINY_CHIP_FORWARD', # on doit bouger le plus petit disque, vers l'avant
+    'TINY_CHIP_BACKWARD', # on doit bouger le plus petit disque, vers l'arrière
+))
+
+# Les différents valeurs possibles pour un type de poteau
+MastType = Enum('Mast', (
+ 'START', # le poteau de départ
+ 'INTERM', # le poteau intermédiaire
+ 'END', # le poteau de fin
+))
 
 
 # --- Les classes pour l'algo en lui-même. ---
@@ -115,7 +118,7 @@ class Mast():
 
     def __init__(self, mast_type):
         """
-        :param mast_type: Le type du poteau. MAST_START / MAST_INTERM / MAST_END.
+        :param mast_type: Le type du poteau. Une valeur de type MastType.*
         """
         # Liste des disques empilés sur le poteau. Ne contient que des objets de classe Chip.
         # L'élément d'indice 0 est le disque tout en bas. L'élément d'indice 1 est le disque
@@ -223,9 +226,9 @@ class HanoiGame():
 
         self.nbr_chip = nbr_chip
         # Création des trois poteaux du jeu (départ, intermédiaire et arrivée)
-        self.mast_start = Mast(MAST_START)
-        self.mast_interm = Mast(MAST_INTERM)
-        self.mast_end = Mast(MAST_END)
+        self.mast_start = Mast(MastType.START)
+        self.mast_interm = Mast(MastType.INTERM)
+        self.mast_end = Mast(MastType.END)
 
         # Création et empilement des disques sur le poteau de départ.
         # On crée d'abord le disque le plus grand (taille = nbr_chip) et on le met sur le poteau.
@@ -334,8 +337,8 @@ class HanoiSolver():
 
     def _determineTinyChipMovement(self, moveType):
         """ détermine le prochain coup à jouer, dans le cas où on doit déplacer le petit disque.
-        moveType doit valoir MOVEMENT_TINY_CHIP_FORWARD, ou MOVEMENT_TINY_CHIP_BACKWARD.
-        moveType ne doit pas valoir MOVEMENT_OTHER_CHIP, parce que ça n'aurait aucun sens.
+        moveType doit valoir Movement.TINY_CHIP_FORWARD, ou Movement.TINY_CHIP_BACKWARD.
+        moveType ne doit pas valoir Movement.OTHER_CHIP, parce que ça n'aurait aucun sens.
         La fonction fait tout planter si jamais le petit disque ne se trouve pas en haut de l'un
         des 3 poteaux de self.hanoi_game. (Mais ce cas débile n'est jamais censé arriver)
 
@@ -345,7 +348,7 @@ class HanoiSolver():
 
         # Définition du dictionnaire permettant de connaître le poteau de destination en fonction
         # du poteau de source.
-        if moveType == MOVEMENT_TINY_CHIP_FORWARD:
+        if moveType == Movement.TINY_CHIP_FORWARD:
             # Le petit disque doit bouger vers l'avant. Le dictionnaire contient donc la config
             # de mouvement suivante :
             # poteau de départ -> poteau intermédiaire -> poteau de fin -> poteau de départ.
@@ -460,8 +463,7 @@ class HanoiSolver():
            et tous les disques sont correctement rangés sur le poteau de fin.
          - Soit un tuple de 4 éléments :
             * nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
-            * moveType. Type de mouvement à faire. Une valeur parmi MOVEMENT_OTHER_CHIP,
-              MOVEMENT_TINY_CHIP_FORWARD ou MOVEMENT_TINY_CHIP_BACKWARD.
+            * moveType. Type de mouvement à faire. Une valeur de type Movement.*.
             * Mast_source : le poteau de source, pour le prochain mouvement à jouer
             * Mast_dest : le poteau de destination, pour le prochain mouvement à jouer. """
 
@@ -473,20 +475,20 @@ class HanoiSolver():
 
         if nb_gaps & 1 == 0:
             # Le nombre de coupure est pair. Il faut déplacer un disque autre que le petit disque.
-            moveType = MOVEMENT_OTHER_CHIP
+            moveType = Movement.OTHER_CHIP
             # On peut déterminer immédiatement les poteaux de source et destination.
             mast_source, mast_dest = self._determineOtherChipMovement()
         else:
             # Le nombre de coupure est impair. Il faut déplacer le petit disque.
             # définition du dictionnaire indiquant le sens du mouvement du petit disque,
             # en fonction d'une parité. 0 : paire. 1 : impaire
-            DICT_MOVEMENT_TINY_CHIP = {
-                0:MOVEMENT_TINY_CHIP_FORWARD,
-                1:MOVEMENT_TINY_CHIP_BACKWARD,
+            move_type_from_parity = {
+                0:Movement.TINY_CHIP_FORWARD,
+                1:Movement.TINY_CHIP_BACKWARD,
             }
             # Le sens du mouvement du petit disque se détermine en fonction de la parité
             # du nombre total de disque dans le jeu.
-            moveType = DICT_MOVEMENT_TINY_CHIP[self.hanoi_game.nbr_chip & 1]
+            moveType = move_type_from_parity[self.hanoi_game.nbr_chip & 1]
             # Détermination des poteaux de source et de destination, pour le petit disque.
             mast_source, mast_dest = self._determineTinyChipMovement(moveType)
 
@@ -635,16 +637,16 @@ class TurnDisplayer():
 
     # Dictionnaire de correspondance <type de mouvement> -> <description du type de mouvement>
     DICT_STR_FROM_MOVEMENT_TYPE = {
-        MOVEMENT_OTHER_CHIP: "Un disque autre que le petit disque",
-        MOVEMENT_TINY_CHIP_FORWARD: "Le petit disque, vers l'avant",
-        MOVEMENT_TINY_CHIP_BACKWARD: "Le petit disque, vers l'arriere",
+        Movement.OTHER_CHIP: "Un disque autre que le petit disque",
+        Movement.TINY_CHIP_FORWARD: "Le petit disque, vers l'avant",
+        Movement.TINY_CHIP_BACKWARD: "Le petit disque, vers l'arriere",
     }
 
     # Dictionnaire de correspondance <type de poteau> -> <description du type de poteau>
     DICT_STR_FROM_MAST_TYPE = {
-        MAST_START: "poteau de depart (a gauche)",
-        MAST_INTERM: "poteau intermediaire (au milieu)",
-        MAST_END: "poteau de fin (a droite)",
+        MastType.START: "poteau de depart (a gauche)",
+        MastType.INTERM: "poteau intermediaire (au milieu)",
+        MastType.END: "poteau de fin (a droite)",
     }
 
     # Pas de fonction constructeur. Pas besoin.
@@ -653,8 +655,7 @@ class TurnDisplayer():
         """ Affiche la description d'un coup joué. Le blabla est balancé sur la sortie standard.
         Paramètre : c'est les infos renvoyée par la fonction hanoiSolver.determineNextChipMovement
          - nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
-         - moveType. Type de mouvement effectué. Une valeur parmi MOVEMENT_OTHER_CHIP,
-           MOVEMENT_TINY_CHIP_FORWARD ou MOVEMENT_TINY_CHIP_BACKWARD.
+         - moveType. Type de mouvement effectué. Une valeur de type Movement.*.
          - Mast_source : le poteau de source.
          - Mast_dest : le poteau de destination. """
 
