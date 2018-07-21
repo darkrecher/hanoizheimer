@@ -269,9 +269,27 @@ class HanoiSolver():
         """
         self.hanoi_game = hanoi_game
 
+    def _get_hanoi_game_masts(self):
+        """
+        :return: un tuple de 3 éléments : les trois objets Mast de hanoi_game.
+        Ça évite de se coltiner des "self.hanoi_game" partout dans le code de cette classe.
+        """
+        return (
+            self.hanoi_game.mast_start,
+            self.hanoi_game.mast_interm,
+            self.hanoi_game.mast_end)
+
     def _find_chip_in_mast_cursors(self, chip_size_to_find, mast_cursors):
         """
-        TODO bla.
+        Retrouve un disque spécifique, parmi les 3 poteaux, à des étages spécifiques.
+        (Donc on ne cherche que parmi 3 positions différentes, une par poteau).
+        :param chip_size_to_find: Nombre entier strictement positif. Taille du chip recherché
+        :param mast_cursors: liste de tuples de deux éléments :
+         - un objet Mast,
+         - un curseur (entier positif), indiquant l'étage du poteau où on recherche le disque.
+        :return: un objet Mast, sur lequel se trouve le disque de taille recherchée,
+        à l'étage indiqué par son curseur.
+        Lève une exception si le disque est introuvable.
         """
         # On cherche le disque dans la liste des 3 poteaux.
         for mast_cursor in mast_cursors:
@@ -284,7 +302,7 @@ class HanoiSolver():
                 # Pour le poteau en cours, et pour le curseur en cours, un disque est présent.
                 return mast_cursor
 
-        raise Exception("TODO. blabla not supposed to happen.")
+        raise Exception("Disque introuvable parmi les 3 positions possibles.")
 
     def _count_gaps(self):
         """
@@ -293,16 +311,18 @@ class HanoiSolver():
         :return: Nombre entier positif ou nul.
         """
 
+        mast_start, mast_interm, mast_end = self._get_hanoi_game_masts()
+
         # On compte le nombre de coupures en commençant par le disque le plus grand,
         # et par le bas des poteaux. On remonte progressivement dans les étages des 3 poteaux.
-        # Création de plusieurs listes de 2 éléments chacune :
+        # Création de 3 listes de 2 éléments chacune :
         #  - un objet Mast,
         #  - un curseur sur l'étage en cours.
         # On commence à l'étage le plus bas (curseur = 0).
         mast_cursors = (
-            [self.hanoi_game.mast_start, 0],
-            [self.hanoi_game.mast_interm, 0],
-            [self.hanoi_game.mast_end, 0],
+            [mast_start, 0],
+            [mast_interm, 0],
+            [mast_end, 0],
         )
 
         # Nombre de coupures actuellement comptées
@@ -335,45 +355,44 @@ class HanoiSolver():
 
         return nb_gaps
 
-    def _determineTinyChipMovement(self, moveType):
-        """ détermine le prochain coup à jouer, dans le cas où on doit déplacer le petit disque.
-        moveType doit valoir Movement.TINY_CHIP_FORWARD, ou Movement.TINY_CHIP_BACKWARD.
-        moveType ne doit pas valoir Movement.OTHER_CHIP, parce que ça n'aurait aucun sens.
-        La fonction fait tout planter si jamais le petit disque ne se trouve pas en haut de l'un
-        des 3 poteaux de self.hanoi_game. (Mais ce cas débile n'est jamais censé arriver)
+    def _determine_tiny_chip_movement(self, move_type):
+        """
+        Détermine le prochain coup à jouer, dans le cas où on doit déplacer le petit disque.
+        :param move_type: valeur Movement.TINY_CHIP_FORWARD ou Movement.TINY_CHIP_BACKWARD.
+        move_type ne doit pas valoir Movement.OTHER_CHIP, car ça n'aurait aucun sens.
+        La fonction lève une exception si jamais le petit disque ne se trouve pas en haut de l'un
+        des 3 poteaux de self.hanoi_game. (Ce cas n'est jamais censé arriver).
 
-        La fonction renvoie un tuple de 2 éléments : 2 référence vers des objets Mast
-         - Mast_source : le poteau de source, pour le prochain mouvement à jouer
-         - Mast_dest : le poteau de destination, pour le prochain mouvement à jouer. """
+        :return: un tuple de 2 éléments. Deux références vers des objets Mast :
+         - mast_source : le poteau de source, pour le prochain mouvement à jouer,
+         - mast_dest : le poteau de destination.
+        """
+
+        mast_start, mast_interm, mast_end = self._get_hanoi_game_masts()
 
         # Définition du dictionnaire permettant de connaître le poteau de destination en fonction
         # du poteau de source.
-        if moveType == Movement.TINY_CHIP_FORWARD:
+        if move_type == Movement.TINY_CHIP_FORWARD:
             # Le petit disque doit bouger vers l'avant. Le dictionnaire contient donc la config
             # de mouvement suivante :
             # poteau de départ -> poteau intermédiaire -> poteau de fin -> poteau de départ.
-            dictTinyChipMovement = {
-                self.hanoi_game.mast_start: self.hanoi_game.mast_interm,
-                self.hanoi_game.mast_interm: self.hanoi_game.mast_end,
-                self.hanoi_game.mast_end: self.hanoi_game.mast_start,
+            dict_tiny_chip_movement = {
+                mast_start: mast_interm,
+                mast_interm: mast_end,
+                mast_end: mast_start,
             }
         else:
             # Le petit disque doit bouger vers l'arrière. Le dictionnaire contient donc la config
             # de mouvement suivante :
             # poteau de fin -> poteau intermédiaire -> poteau de départ -> poteau de fin.
-            dictTinyChipMovement = {
-                self.hanoi_game.mast_start: self.hanoi_game.mast_end,
-                self.hanoi_game.mast_interm: self.hanoi_game.mast_start,
-                self.hanoi_game.mast_end: self.hanoi_game.mast_interm,
+            dict_tiny_chip_movement = {
+                mast_start: mast_end,
+                mast_interm: mast_start,
+                mast_end: mast_interm,
             }
 
-        listMast = (self.hanoi_game.mast_start,
-                    self.hanoi_game.mast_interm,
-                    self.hanoi_game.mast_end)
-
-        # On recherche le petit disque, en vérifiant le disque qui se trouve
-        # tout en haut de chaque poteau.
-        for mast in listMast:
+        # On recherche le petit disque, parmi les disques en haut de chaque poteau.
+        for mast in (mast_start, mast_interm, mast_end):
             chip = mast.get_top_chip()
             if chip is not None and chip.size == 1:
                 # On a trouvé le petit disque en haut du poteau en cours.
@@ -382,77 +401,84 @@ class HanoiSolver():
                 mast_source = mast
                 # Détermination du potau de destination en fonction du poteau de source,
                 # et du dictionnaire de config des mouvements.
-                mast_dest = dictTinyChipMovement[mast]
+                mast_dest = dict_tiny_chip_movement[mast]
                 return mast_source, mast_dest
 
         # Après avoir regardé le haut de tous les poteaux, le petit disque est introuvable.
-        # On fait tout planter. (Ca arrive jamais)
-        print("fail. tiny Chip introuvable")
-        assert False
+        # On lève une exception. (Ça ne devrait pas arriver)
+        raise Exception("Fail. Tiny Chip introuvable.")
 
-    def _determineOtherChipMovement(self):
-        """ détermine le prochain coup à jouer, dans le cas où on doit déplacer un disque
+    def _index_none_or_highest(self, val_0, val_1):
+        """
+        Renvoie l'index (0 ou 1) du paramètre qui vaut None parmi val_0 et val_1.
+        Si pas de None, renvoie l'index (0 ou 1) de la valeur la plus grande.
+        Lève une exception dans tous les autres cas.
+        :param val_0: None ou nombre entier.
+        :param val_1: None ou nombre entier.
+        :return: Nombre entier. 0 ou 1.
+        """
+        if val_0 is None and val_1 is None:
+            raise Exception("Fail. Deux valeurs None.")
+        if val_0 is None:
+            return 0
+        if val_1 is None:
+            return 1
+        if val_0 > val_1:
+            return 0
+        if val_0 < val_1:
+            return 1
+        raise Exception("Fail. Deux valeurs égales.")
+
+    def _determine_other_chip_movement(self):
+        """
+        Détermine le prochain coup à jouer, dans le cas où on doit déplacer un disque
         autre que le petit disque.
-        La fonction renvoie un tuple de 2 éléments : 2 référence vers des objets Mast
-         - Mast_source : le poteau de source, pour le prochain mouvement à jouer
-         - Mast_dest : le poteau de destination, pour le prochain mouvement à jouer. """
+        :return: un tuple de 2 éléments. Deux références vers des objets Mast :
+         - mast_source : le poteau de source, pour le prochain mouvement à jouer,
+         - mast_dest : le poteau de destination.
+        """
 
-        listMast = (self.hanoi_game.mast_start,
-                    self.hanoi_game.mast_interm,
-                    self.hanoi_game.mast_end)
+        masts = self._get_hanoi_game_masts()
 
         # Cette liste va contenir 2 éléments, correspondant à 2 poteaux du jeu.
         # Le poteau qu'on éliminera sera celui contenant le petit disque.
         # Chaque élément de cette liste est un tuple de 2 sous-éléments :
         #  - Référence vers le poteau en question.
-        #  - * Soit une valeur entière (taille du disque se trouvant tout en haut du poteau)
-        #    * Soit la valeur None (le poteau ne contient pas de disque)
-        listMastWithSize = []
+        #  - Soit une valeur entière (taille du disque se trouvant tout en haut du poteau),
+        #    soit None (le poteau ne contient pas de disque)
+        masts_with_size = []
 
-        # on parcourt la liste des 3 poteaux, pour remplir listMastWithSize
-        for mast in listMast:
+        # Initialisation de masts_with_size
+        for mast in masts:
             chip = mast.get_top_chip()
             if chip is None:
-                # Le poteau en cours ne contient pas de disque. On l'ajoute à listMastWithSize,
+                # Le poteau en cours ne contient pas de disque. On l'ajoute à masts_with_size,
                 # En indiquant None dans le deuxième sous-élément
-                listMastWithSize.append((mast, None))
+                masts_with_size.append((mast, None))
             elif chip.size != 1:
                 # Le poteau en cours contient un/des disques, et le disque du haut n'est pas
-                # le petit disque. On l'ajoute à listMastWithSize,
+                # le petit disque. On l'ajoute à masts_with_size,
                 # en indiquant la taille du disque dans le deuxième sous-élément.
-                listMastWithSize.append((mast, chip.size))
-            # Lorsque le poteau en cours contient un/des disques, et que le disque du haut est
-            # le petit disque, on ne fait rien.
+                masts_with_size.append((mast, chip.size))
+            # Dans le troisième cas : le poteau en cours contient le petit disque tout en haut,
+            # on ne fait rien.
 
-        # Maintenant que listMastWithSize est remplie, on doit déterminer quel est le poteau
-        # de source, et quelle est le poteau de destination, parmi les 2 éléments de cette liste.
-        if listMastWithSize[0][1] is None:
-            # Le 1er élément de listMastWithSize est un poteau sans disque.
-            # Donc le poteau de source, c'est l'autre (le 2eme)
-            mast_source = listMastWithSize[1][0]
-            # et le poteau de destination, c'est celui-là. (le 1er)
-            mast_dest = listMastWithSize[0][0]
-        elif listMastWithSize[1][1] is None:
-            # Le 2eme élément de listMastWithSize est un poteau sans disque.
-            # Donc le poteau de source, c'est l'autre (le 1er)
-            mast_source = listMastWithSize[0][0]
-            # et le poteau de destination, c'est celui-là. (le 2eme)
-            mast_dest = listMastWithSize[1][0]
-        elif listMastWithSize[0][1] < listMastWithSize[1][1]:
-            # Les deux poteaux contiennent des disques. Et le disque du haut du 1er poteau
-            # est plus petit que le disque du haut du 2eme poteau.
-            # Le poteau de source est celui avec le plus petit disque (le 1er)
-            mast_source = listMastWithSize[0][0]
-            # Le poteau de destination c'est l'autre (le 2eme)
-            mast_dest = listMastWithSize[1][0]
-        else:
-            # Les deux poteaux contiennent des disques. Et le disque du haut du 1er poteau
-            # est plus grand que le disque du haut du 2eme poteau.
-            # Le poteau de source est celui avec le plus petit disque (le 2eme)
-            mast_source = listMastWithSize[1][0]
-            # Le poteau de destination c'est l'autre (le 1er)
-            mast_dest = listMastWithSize[0][0]
+        # On doit maintenant déterminer le poteau source et le poteau de destination,
+        # parmi les 2 éléments de cette liste.
+        # Si l'un des deux poteau n'a pas de disque (le deuxième sous-elem vaut None),
+        # alors c'est forcément le poteau de destination.
+        # Si les deux poteaux ont des disques, le poteau de destination est celui
+        # ayant le plus grand disque tout en haut. (le duexième sous-elem est le plus grand).
+        index_mast_dest = self._index_none_or_highest(
+            masts_with_size[0][1],
+            masts_with_size[1][1])
 
+        # Et le poteau source, c'est celui qui n'est pas le poteau de destination. Ha ha ha.
+        dict_other_index = { 0:1, 1:0 }
+        index_mast_source = dict_other_index[index_mast_dest]
+
+        mast_source = masts_with_size[index_mast_source][0]
+        mast_dest = masts_with_size[index_mast_dest][0]
         return mast_source, mast_dest
 
     def determineNextChipMovement(self):
@@ -477,7 +503,7 @@ class HanoiSolver():
             # Le nombre de coupure est pair. Il faut déplacer un disque autre que le petit disque.
             moveType = Movement.OTHER_CHIP
             # On peut déterminer immédiatement les poteaux de source et destination.
-            mast_source, mast_dest = self._determineOtherChipMovement()
+            mast_source, mast_dest = self._determine_other_chip_movement()
         else:
             # Le nombre de coupure est impair. Il faut déplacer le petit disque.
             # définition du dictionnaire indiquant le sens du mouvement du petit disque,
@@ -490,7 +516,7 @@ class HanoiSolver():
             # du nombre total de disque dans le jeu.
             moveType = move_type_from_parity[self.hanoi_game.nbr_chip & 1]
             # Détermination des poteaux de source et de destination, pour le petit disque.
-            mast_source, mast_dest = self._determineTinyChipMovement(moveType)
+            mast_source, mast_dest = self._determine_tiny_chip_movement(moveType)
 
         return (nb_gaps, moveType, mast_source, mast_dest)
 
