@@ -266,61 +266,71 @@ class HanoiSolver():
         """
         self.hanoi_game = hanoi_game
 
-    def _countGap(self):
-        """ Analyse la la situation de jeu définie dans self.hanoi_game,
-        et compte le nombre de coupures dans l'ordre des disques.
-        Valeurs de retour : un nombre entier positif ou nul.
-        Cette fonction compte le nombre de coupures en commençant par le disque le plus grand,
-        et par le bas des poteaux. Et elle remonte dans les étages des 3 poteaux"""
+    def _find_chip_in_mast_cursors(self, chip_size_to_find, mast_cursors):
+        """
+        TODO bla.
+        """
+        # On cherche le disque dans la liste des 3 poteaux.
+        for mast_cursor in mast_cursors:
 
-        #Création de liste de 2 éléments : la référence vers un objet Mast, et un curseur sur l'étage en cours.
-        # On commence à l'étage le plus bas (curseur = 0)
-        MastCursorStart = [self.hanoi_game.mast_start, 0]
-        MastCursorInterm = [self.hanoi_game.mast_interm, 0]
-        MastCursorEnd = [self.hanoi_game.mast_end, 0]
+            mast, cursor = mast_cursor
+            # Pour chaque poteau, on regarde uniquement le disque pointé par son curseur.
+            chip = mast.get_chip(cursor)
 
-        listMastCursor = (MastCursorStart, MastCursorInterm, MastCursorEnd)
+            if chip is not None and chip.size == chip_size_to_find:
+                # Pour le poteau en cours, et pour le curseur en cours, un disque est présent.
+                return mast_cursor
+
+        raise Exception("TODO. blabla not supposed to happen.")
+
+    def _count_gaps(self):
+        """
+        Analyse la la situation de jeu de self.hanoi_game et compte le nombre de coupures
+        dans l'ordre des disques.
+        :return: Nombre entier positif ou nul.
+        """
+
+        # On compte le nombre de coupures en commençant par le disque le plus grand,
+        # et par le bas des poteaux. On remonte progressivement dans les étages des 3 poteaux.
+        # Création de plusieurs listes de 2 éléments chacune :
+        #  - un objet Mast,
+        #  - un curseur sur l'étage en cours.
+        # On commence à l'étage le plus bas (curseur = 0).
+        mast_cursors = (
+            [self.hanoi_game.mast_start, 0],
+            [self.hanoi_game.mast_interm, 0],
+            [self.hanoi_game.mast_end, 0],
+        )
 
         # Nombre de coupures actuellement comptées
-        nbGap = 0
+        nb_gaps = 0
         # référence vers le poteau sur lequel se trouve le disque précédent.
-        # On initialise cette référence au poteau de fin. Car on considère qu'il y a une coupure
+        # On l'initialise sur le poteau de fin, car on considère qu'il y a une coupure
         # si le plus grand disque est à un autre endroit que le poteau de fin.
-        # (En fait, c'est comme si y'avait un disque de taille nbChip + 1, sur le poteau de fin,
-        # qui ne bouge jamais.)
-        previousMast = self.hanoi_game.mast_end
+        # (En fait, c'est comme si y'avait un disque de taille nb_chip+1 sur le poteau de fin,
+        # qui ne bouge jamais).
+        previous_mast = self.hanoi_game.mast_end
 
-        # currentChipSizeToFind indique la taille du disque qu'on cherche actuellement.
-        # On va du plus grand disque (nbr_chip) jusqu'au plus petit (1)
-        for currentChipSizeToFind in range(self.hanoi_game.nbr_chip, 0, -1):
+        # chip_size_to_find indique la taille du disque qu'on cherche actuellement.
+        # On va du plus grand disque (taille=nbr_chip) au plus petit (taille=1)
+        for chip_size_to_find in range(self.hanoi_game.nbr_chip, 0, -1):
 
-            # On cherche le disque dans la liste des 3 poteaux.
-            for mastCursor in listMastCursor:
+            mast_cursor = self._find_chip_in_mast_cursors(
+                chip_size_to_find,
+                mast_cursors)
 
-                mast, cursor = mastCursor
-                # Pour chaque poteau, on regarde uniquement le disque pointé par son curseur.
-                chip = mast.get_chip(cursor)
+            # On a trouvé le poteau et le curseur sur lequel se trouve le disque
+            # ayant la taille recherchée.
+            # On monte d'un étage le curseur de ce poteau.
+            mast_cursor[1] += 1
+            # On vérifie si le disque précédent et le disque qu'on vient de trouver
+            # sont sur le même poteau.
+            if mast_cursor[0] != previous_mast:
+                # Pas le même poteau : une coupure de plus, et on change le poteau en cours.
+                nb_gaps += 1
+                previous_mast = mast_cursor[0]
 
-                if chip is not None:
-                    # Pour le poteau en cours, et pour le curseur en cours, un disque est présent.
-                    if chip.size == currentChipSizeToFind:
-                        # La taille du disque du poteau en cours correspond
-                        # à la taille du disque actuellement recherchée.
-                        # On monte d'un étage le curseur du poteau en cours.
-                        mastCursor[1] += 1
-                        # On vérifie si le disque précédent et le disque actuellement recherché
-                        # sont placés sur le même poteau.
-                        if mast != previousMast:
-                            # Ils ne sont pas sur le même poteau. Ca fait une coupure de plus.
-                            nbGap += 1
-                            previousMast = mast
-                        # Break un peu dégueu pour sortir de la boucle. C'est pas obligé en fait.
-                        # Si on continue, ça plantera pas et l'algo fonctionnera toujours.
-                        # C'est juste que ça sert plus à rien.
-                        # Allez, on dit qu'on a le droit de faire des break
-                        break
-
-        return nbGap
+        return nb_gaps
 
     def _determineTinyChipMovement(self, moveType):
         """ détermine le prochain coup à jouer, dans le cas où on doit déplacer le petit disque.
@@ -449,19 +459,19 @@ class HanoiSolver():
          - Soit la valeur None. Dans ce cas, le jeu est déjà fini,
            et tous les disques sont correctement rangés sur le poteau de fin.
          - Soit un tuple de 4 éléments :
-            * nbGap. Entier positif. Nombre de coupures comptées dans le jeu.
+            * nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
             * moveType. Type de mouvement à faire. Une valeur parmi MOVEMENT_OTHER_CHIP,
               MOVEMENT_TINY_CHIP_FORWARD ou MOVEMENT_TINY_CHIP_BACKWARD.
             * Mast_source : le poteau de source, pour le prochain mouvement à jouer
             * Mast_dest : le poteau de destination, pour le prochain mouvement à jouer. """
 
         #on compte le nombre de coupures
-        nbGap = self._countGap()
-        if nbGap == 0:
+        nb_gaps = self._count_gaps()
+        if nb_gaps == 0:
             # 0 coupures. Tout est bien rangé, le jeu est fini, on renvoie None.
             return None
 
-        if nbGap & 1 == 0:
+        if nb_gaps & 1 == 0:
             # Le nombre de coupure est pair. Il faut déplacer un disque autre que le petit disque.
             moveType = MOVEMENT_OTHER_CHIP
             # On peut déterminer immédiatement les poteaux de source et destination.
@@ -480,7 +490,7 @@ class HanoiSolver():
             # Détermination des poteaux de source et de destination, pour le petit disque.
             mast_source, mast_dest = self._determineTinyChipMovement(moveType)
 
-        return (nbGap, moveType, mast_source, mast_dest)
+        return (nb_gaps, moveType, mast_source, mast_dest)
 
 
 # --- Les classes de log/affichage/vue. ---
@@ -639,16 +649,16 @@ class TurnDisplayer():
 
     # Pas de fonction constructeur. Pas besoin.
 
-    def display(self, nbGap, moveType, mast_source, mast_dest):
+    def display(self, nb_gaps, moveType, mast_source, mast_dest):
         """ Affiche la description d'un coup joué. Le blabla est balancé sur la sortie standard.
         Paramètre : c'est les infos renvoyée par la fonction hanoiSolver.determineNextChipMovement
-         - nbGap. Entier positif. Nombre de coupures comptées dans le jeu.
+         - nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
          - moveType. Type de mouvement effectué. Une valeur parmi MOVEMENT_OTHER_CHIP,
            MOVEMENT_TINY_CHIP_FORWARD ou MOVEMENT_TINY_CHIP_BACKWARD.
          - Mast_source : le poteau de source.
          - Mast_dest : le poteau de destination. """
 
-        print("Nombre de coupures dans l'ordre des disques :", nbGap)
+        print("Nombre de coupures dans l'ordre des disques :", nb_gaps)
         strMoveType = self.DICT_STR_FROM_MOVEMENT_TYPE[moveType]
         print("Type de mouvement :", strMoveType)
         strMast_sourceType = self.DICT_STR_FROM_MAST_TYPE[mast_source.mast_type]
@@ -697,9 +707,9 @@ def solveFullGame(nbChip):
 
         else:
             # Les infos concernant le prochain coup à jouer sont valides. On les décompose.
-            (nbGap, moveType, mast_source, mast_dest) = movementInfo
+            (nb_gaps, moveType, mast_source, mast_dest) = movementInfo
             # Affichage de la description du coup à jouer.
-            turnDisplayer.display(nbGap, moveType, mast_source, mast_dest)
+            turnDisplayer.display(nb_gaps, moveType, mast_source, mast_dest)
             # On effectue le déplacement d'un disque, selon ce qu'a déduit le hanoiSolver.
             hanoi_game.move_chip(mast_source, mast_dest)
 
