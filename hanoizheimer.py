@@ -653,18 +653,19 @@ class MastsDisplayer():
 
 
 class TurnDisplayer():
-    """ Classe affichant sur la sortie standard la description d'un coup joué.
-    Avec quelques vagues explications indiquant comment on a déduit le coup.
-    Type MVC : Vue """
+    """
+    Affiche sur la sortie standard la description d'un coup joué,
+    avec quelques vagues explications indiquant comment le coup a été déduit.
+    """
 
-    # Dictionnaire de correspondance <type de mouvement> -> <description du type de mouvement>
+    # Correspondance {type de mouvement} -> {description du type de mouvement}
     DICT_STR_FROM_MOVEMENT_TYPE = {
         Movement.OTHER_CHIP: "Un disque autre que le petit disque",
         Movement.TINY_CHIP_FORWARD: "Le petit disque, vers l'avant",
         Movement.TINY_CHIP_BACKWARD: "Le petit disque, vers l'arriere",
     }
 
-    # Dictionnaire de correspondance <type de poteau> -> <description du type de poteau>
+    # Dictionnaire de correspondance {type de poteau} -> {description du type de poteau}
     DICT_STR_FROM_MAST_TYPE = {
         MastType.START: "poteau de depart (a gauche)",
         MastType.INTERM: "poteau intermediaire (au milieu)",
@@ -673,21 +674,36 @@ class TurnDisplayer():
 
     # Pas de fonction constructeur. Pas besoin.
 
-    def display(self, nb_gaps, moveType, mast_source, mast_dest):
-        """ Affiche la description d'un coup joué. Le blabla est balancé sur la sortie standard.
-        Paramètre : c'est les infos renvoyée par la fonction hanoiSolver.determine_next_movement
-         - nb_gaps. Entier positif. Nombre de coupures comptées dans le jeu.
-         - moveType. Type de mouvement effectué. Une valeur de type Movement.*.
-         - Mast_source : le poteau de source.
-         - Mast_dest : le poteau de destination. """
+    def display(self, nb_gaps, move_type, mast_source, mast_dest):
+        """
+        Envoie sur la sortie standard la description d'un coup joué.
+        Les paramètres sont constitués des infos renvoyées
+        par la fonction hanoiSolver.determine_next_movement
+        :param nb_gaps: int>0. Nombre de coupures comptées dans le jeu.
+        :param move_type: Valeur de type Movement.*. Type de mouvement effectué.
+        :param mast_source: Objet Mast. Le poteau de source.
+        :param mast_dest: Objet Mast. Le poteau de destination.
+        """
 
-        print("Nombre de coupures dans l'ordre des disques :", nb_gaps)
-        strMoveType = self.DICT_STR_FROM_MOVEMENT_TYPE[moveType]
-        print("Type de mouvement :", strMoveType)
-        strMast_sourceType = self.DICT_STR_FROM_MAST_TYPE[mast_source.mast_type]
-        print("Poteau source         :", strMast_sourceType)
-        strMast_destType = self.DICT_STR_FROM_MAST_TYPE[mast_dest.mast_type]
-        print("Poteau de destination :", strMast_destType)
+        labels_and_values = (
+            (
+                "Nombre de coupures dans l'ordre des disques",
+                nb_gaps
+            ), (
+                "Type de mouvement",
+                self.DICT_STR_FROM_MOVEMENT_TYPE[move_type]
+            ), (
+                # Ajout d'espace pour être au même niveau que la valeur 'poteau de destination'.
+                "Poteau source        ",
+                self.DICT_STR_FROM_MAST_TYPE[mast_source.mast_type]
+            ), (
+                "Poteau de destination",
+                self.DICT_STR_FROM_MAST_TYPE[mast_dest.mast_type]
+            )
+        )
+
+        for label, value in labels_and_values:
+            print('%s : %s' % (label, value))
 
 
 # --- Les fonctions qui coordonnent tout l'ensemble. ---
