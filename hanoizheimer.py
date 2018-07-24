@@ -523,137 +523,133 @@ class HanoiSolver():
 
 # --- Les classes de log/affichage/vue. ---
 
-class ListMastDisplayer():
-    """ Classe affichant sur la sortie standard une situation de jeu des tours de Hanoï.
+class MastsDisplayer():
+    """
+    Affiche sur la sortie standard une situation de jeu des tours de Hanoï.
     Cette classe est assez permissive. On pourrait avoir autant de poteaux qu'on veut,
-    et on pourrait avoir des disques avec des tailles comme on veut. (plusieurs disques de la
-    même taille, des tailles de disques manquantes, ...). En vrai, tout cela n'arrive jamais,
-    mais si on a envie, on pourrait l'afficher.
+    plusieurs disques de la même taille, des tailles de disques manquantes, etc.
 
     Méthode :
-     - Les poteaux sont affichées les uns à côté des autres.
-     - La hauteur des poteaux dépend du nombre total de disque.
-     - La largeur des poteaux dépend de la taille du plus grand disque présent dans le jeu.
+     - Les poteaux sont affichés les uns à côté des autres.
+     - La hauteur des poteaux dépend du nombre total de disques.
+     - La largeur des poteaux dépend de la taille du plus grand disque.
      - Pour afficher un disque de taille X, on affiche X caractères à gauche du poteau, un caractère
-       au milieu, pour le poteau lui-même, et encore X caractère à droite du poteau.
+       au milieu, et encore X caractère à droite.
        Donc : taille en caractère = 2 * taille du disque + 1
-     - Les disques de taille paire et impaire ne sont pas affichés avec le même caractère. C'est
-       juste pour faire joli et un peu plus claire.
+     - Pour plus de clarté, les disques de taille paire et impaire
+       ne sont pas affichés avec le même caractère.
      - Après avoir affiché tous les étages de tous les poteaux, on affiche une dernière ligne,
        représentant le sol.
+    """
 
-    Type MVC : Vue """
-
-    # Marge de hauteur des poteaux. La hauteur des poteaux est égale au nombre total
-    # de disque + la marge.
+    # Marge de hauteur. Hauteur totale d'un poteau = nombre de disque + cette marge.
     HEIGHT_MAST_MARGIN = 1
-    # Nombre d'espacement entre 2 poteaux.
-    NB_SPACE_BETWEEN = 3
-    # Chaîne de caractère à afficher entre les poteaux, donc.
-    STR_SPACE_BETWEEN = " " * NB_SPACE_BETWEEN
-    # Caractère utilisé pour afficher un étage du poteau, quand y'a pas de disque dessus.
-    CHAR_MAST = "|"
-    # Caractère pour afficher le sol.
-    CHAR_GROUND = "."
-    # Caractère pour afficher les disques dont la taille est impaire
-    CHAR_CHIP_EVEN = "-"
-    # Caractère pour afficher les disques dont la taille est paire
-    CHAR_CHIP_ODD = "+"
-    # Correspondance entre la parité de la taille d'un disque,
-    # et le caractère utilisé pour l'afficher.
-    DICT_CHAR_CHIP = { 0:CHAR_CHIP_EVEN, 1:CHAR_CHIP_ODD }
+    # Nombre d'espace entre 2 poteaux.
+    INTERV_SIZE = 3
+    # On en déduit la chaîne de caractère à afficher entre les poteaux.
+    STR_SPACE_BETWEEN = ' ' * INTERV_SIZE
+    # Caractère utilisé pour afficher un étage du poteau sans disque.
+    CHAR_MAST = '|'
+    # Caractère pour le sol.
+    CHAR_GROUND = '.'
+    # Caractère pour les disques de taille impaire
+    CHAR_CHIP_EVEN = '-'
+    # Caractère pour les disques de taille paire
+    CHAR_CHIP_ODD = '+'
+    # Correspondance entre la parité et le caractère.
+    DICT_CHAR_CHIP = { 0: CHAR_CHIP_EVEN, 1: CHAR_CHIP_ODD }
 
-    def __init__(self, listMast):
-        """ fonction constructeur. listMast est une liste d'objet Mast, contenant les poteaux
-        à afficher. L'ordre d'affichage des poteaux, de gauche à droite, correspond à l'ordre
-        dans la liste. Cette liste n'est pas obligée de contenir 3 poteaux. On pourrait en
-        avoir plus ou moins que ça. (Mais en vrai on le fait pas). """
+    def __init__(self, masts):
+        """
+        Constructeur.
+        :param masts: liste d'objets Mast, les poteaux à afficher.
+        L'ordre d'affichage correspond à l'ordre dans la liste.
+        """
+        self.masts = masts
+        self._determine_dimensions()
 
-        self.listMast = listMast
-        self.determineDimensions()
-
-    def determineDimensions(self):
-        """ fonction a exécuter au début, avant de faire des affichages de poteaux.
-        Elle permet d'initialiser des valeurs internes : dimension des poteaux,
-        la taille d'une ligne complète, etc."""
+    def _determine_dimensions(self):
+        """
+        À exécuter au début, avant de faire des affichages.
+        Permet d'initialiser les valeurs internes : dimension des poteaux,
+        taille d'une ligne complète, etc.
+        """
 
         # Nombre total de disque dans le jeu.
-        self.nbTotalChip = sum([ mast.get_nb_chips() for mast in self.listMast ])
-        # Taille du plus gros disque dans le jeu.
-        self.sizeMaxChip = max([ mast.get_max_size_chips() for mast in self.listMast ])
+        self.nb_total_chips = sum(( mast.get_nb_chips() for mast in self.masts ))
+        # Taille du plus gros disque du jeu.
+        self.size_max_chip = max(( mast.get_max_size_chips() for mast in self.masts ))
         # Hauteur des poteaux
-        self.mastHeight = self.nbTotalChip + self.HEIGHT_MAST_MARGIN
-        # Largeur des poteaux (Tous les poteaux doivent pouvoir afficher le plus gros disque).
-        # Donc la largeur d'un poteau, c'est la taille en caractère du plus gros disque.
-        self.mastWidth = self.sizeMaxChip*2 + 1
+        self.mast_height = self.nb_total_chips + self.HEIGHT_MAST_MARGIN
+        # Largeur des poteaux. Tous les poteaux doivent pouvoir afficher
+        # le plus gros disque. Donc largeur = la taille en caractère du plus gros disque.
+        self.mast_width = self.size_max_chip*2 + 1
         # Nombre de poteaux
-        nbMast = len(self.listMast)
-        # Largeur totale d'une ligne, pour afficher tous les poteaux.
+        nb_masts = len(self.masts)
+        # Largeur totale d'une ligne affichant tous les poteaux.
         # Il faut tenir compte du nombre de poteaux, de leur largeurs,
-        # mais aussi du nombre d'intervalle entre les poteaux, et de la largeur de ces intervaux.
-        # (Je dis intervaux et je vous emmerde)
-        self.totalWidth = sum((self.mastWidth * nbMast,
-                               self.NB_SPACE_BETWEEN * (nbMast-1)))
-
-        # Chaîne de caracètre à afficher pour l'étage d'un poteau ne contenant pas de disque.
-        # Il faut des espaces, autant que la taille max d'un disque, avec au milieu le petit
-        # caractère montrant que c'est juste un poteau avec rien autour.
-        self.strNoChip = "".join((" "*self.sizeMaxChip,
-                                  self.CHAR_MAST,
-                                  " "*self.sizeMaxChip))
-
+        # du nombre d'intervalle entre les poteaux, et de la largeur de ces intervaux.
+        # (Je dis intervaux et je vous emmerde).
+        total_width = self.mast_width*nb_masts + self.INTERV_SIZE*(nb_masts-1)
+        # Chaîne de caracètre à afficher pour l'étage d'un poteau sans disque.
+        # Il faut des espaces, avec au milieu le caractère spécifique du poteau sans disque.
+        self.str_no_chip = ''.join((
+            ' ' * self.size_max_chip,
+            self.CHAR_MAST,
+            ' ' * self.size_max_chip,
+        ))
         # Chaîne de caractère à afficher pour le sol. C'est la largeur totale d'une ligne,
         # avec le caractère idoinement utilisé pour le sol. Ha ha.
-        self.strGround = self.CHAR_GROUND * self.totalWidth
+        self.str_ground = self.CHAR_GROUND * total_width
 
-    def strChip(self, chip):
-        """ renvoie une chaîne de caractère représentant un disque (ou une absence de disque).
-        La chaîne renvoyée a une taille fixe, égale à self.mastWidth.
-        (il y a éventuellement des espaces de part et d'autres du disque, afin de la compléter).
-        Ca permet d'utiliser cette chaîne pour afficher directement l'étage d'un poteau.
-        Quel que soit le contenu de cet étage.
-        Le paramètre chip est soit None (absence de disque), soit un objet Chip.
+    def _get_str_floor(self, chip):
+        """
+        Renvoie une chaîne de caractère représentant un étage (avec ou sans disque).
+        La chaîne renvoyée a une taille fixe, égale à self.mast_width.
+        il y a éventuellement des espaces de part et d'autres du disque affiché,
+        afin de la compléter pour atteindre la taille fixe.
+        :param chip: soit None (absence de disque), soit un objet Chip.
         """
 
         if chip is None:
             # pas de disque. On renvoie directement la chaîne de caractère correspondant à
             # un étage de poteau sans disque.
-            return self.strNoChip
+            return self.str_no_chip
         else:
             # Y'a un disque. On calcule sa largeur en caractère
-            chipDisplayWidth = chip.size*2 + 1
+            chip_str_width = chip.size*2 + 1
             # Calcul du nombre d'espace à écrire de part et d'autre du disque, pour compléter.
-            nbSpace = (self.mastWidth - chipDisplayWidth) // 2
-            strSpace = " " * nbSpace
-            # Détermination du caractère à utiliser pour afficher le disque (selon qu'il a une
-            # taille paire ou impaire)
-            charChip = self.DICT_CHAR_CHIP[chip.size & 1]
-            strChip = charChip * chipDisplayWidth
+            nb_spaces = (self.mast_width - chip_str_width) // 2
+            str_space = ' ' * nb_spaces
+            # Caractère à utiliser pour afficher le disque (selon la parité de sa taille).
+            chr_chip = self.DICT_CHAR_CHIP[chip.size & 1]
+            str_chip = chr_chip * chip_str_width
             # On colle tout : les espaces, le disque, encore les espaces.
-            return "".join((strSpace, strChip, strSpace))
+            return ''.join((str_space, str_chip, str_space))
 
     def display(self):
-        """ Affiche la liste des poteaux, côte à côte, avec les disques.
-        Le tout est balancé sur la sortie standard."""
+        """
+        Affiche les étages des poteaux, côte à côte, avec leurs disques.
+        Le texte affiché est envoyé sur la sortie standard.
+        """
 
-        # On parcourt tous les étages, depuis le haut (self.mastHeight - 1) vers le bas (0).
-        for floorIndex in range(self.mastHeight-1, -1, -1):
-
-            # Pour un étage, on prend tous les poteaux un par un, et on récupère la chaîne
-            # de caractère représentant cet étage de ce poteau. (Qui contient un disque, ou pas)
-            listStrChip = [ self.strChip(mast.get_chip(floorIndex))
-                            for mast in self.listMast ]
-
-            # On concatène ces chaînes de caractère, avec quelques espaces entre,
-            # pour faire les intervaux. (Voilà)
-            strFloor = self.STR_SPACE_BETWEEN.join(listStrChip)
+        # On parcourt tous les étages, depuis le haut (self.mast_height-1) vers le bas (0).
+        for index_floor in range(self.mast_height-1, -1, -1):
+            # Pour chaque poteau, récupération de la chaîne de caractère de l'étage concerné.
+            str_floor_masts = (
+                self._get_str_floor(mast.get_chip(index_floor))
+                for mast in self.masts
+            )
+            # Concaténation de ces chaînes de caractère,
+            # avec les espaces d'intervaux entre chaque poteau.
+            str_floor_complete = self.STR_SPACE_BETWEEN.join(str_floor_masts)
             # Ca fait une grande ligne, affichant un étage pour tous les poteaux.
-            print(strFloor)
+            print(str_floor_complete)
 
-        # Affichage de la grande ligne représentant le sol
-        print(self.strGround)
-        # Et un p'tit saut de ligne juste pour déconner.
-        print("")
+        # Affichage de la dernière ligne représentant le sol.
+        print(self.str_ground)
+        # Et un p'tit saut de ligne pour la forme.
+        print('')
 
 
 class TurnDisplayer():
@@ -708,8 +704,8 @@ def solveFullGame(nbChip):
 
     # Initialisation des classes de Vue, qui afficheront la situation du jeu et la
     # description des coups joués.
-    listMast = (hanoi_game.mast_start, hanoi_game.mast_interm, hanoi_game.mast_end)
-    listMastDisplayer = ListMastDisplayer(listMast)
+    masts = (hanoi_game.mast_start, hanoi_game.mast_interm, hanoi_game.mast_end)
+    masts_displayer = MastsDisplayer(masts)
     turnDisplayer = TurnDisplayer()
 
     # Booléen à la con
@@ -718,7 +714,7 @@ def solveFullGame(nbChip):
     while gameNotFinished:
 
         # On affiche la situation de jeu actuel. Les 3 poteaux, avec la disposition des disques.
-        listMastDisplayer.display()
+        masts_displayer.display()
         # Création de la classe résolvant le jeu.
         hanoiSolver = HanoiSolver(hanoi_game)
         # Utilisation de cette classe pour déterminer le prochain coup à jouer,
