@@ -252,6 +252,12 @@ class HanoiGame():
         # Placement du disque récupéré, sur le poteau de destination.
         mast_dest.add_chip(chip_to_move)
 
+    def get_masts(self):
+        """
+        :return: un tuple de 3 éléments : les trois objets Mast de la classe.
+        """
+        return (self.mast_start, self.mast_interm, self.mast_end)
+
 
 class HanoiSolver():
     """
@@ -268,16 +274,6 @@ class HanoiSolver():
         Elle se contente de récupérer des infos, en lecture seule.
         """
         self.hanoi_game = hanoi_game
-
-    def _get_hanoi_game_masts(self):
-        """
-        :return: un tuple de 3 éléments : les trois objets Mast de hanoi_game.
-        Ça évite de se coltiner des "self.hanoi_game" partout dans le code de cette classe.
-        """
-        return (
-            self.hanoi_game.mast_start,
-            self.hanoi_game.mast_interm,
-            self.hanoi_game.mast_end)
 
     def _find_chip_in_mast_cursors(self, chip_size_to_find, mast_cursors):
         """
@@ -311,7 +307,7 @@ class HanoiSolver():
         :return: Nombre entier positif ou nul.
         """
 
-        mast_start, mast_interm, mast_end = self._get_hanoi_game_masts()
+        mast_start, mast_interm, mast_end = self.hanoi_game.get_masts()
 
         # On compte le nombre de coupures en commençant par le disque le plus grand,
         # et par le bas des poteaux. On remonte progressivement dans les étages des 3 poteaux.
@@ -368,7 +364,7 @@ class HanoiSolver():
          - mast_dest : le poteau de destination.
         """
 
-        mast_start, mast_interm, mast_end = self._get_hanoi_game_masts()
+        mast_start, mast_interm, mast_end = self.hanoi_game.get_masts()
 
         # Définition du dictionnaire permettant de connaître le poteau de destination en fonction
         # du poteau de source.
@@ -438,7 +434,7 @@ class HanoiSolver():
          - mast_dest : le poteau de destination.
         """
 
-        masts = self._get_hanoi_game_masts()
+        masts = self.hanoi_game.get_masts()
 
         # Cette liste va contenir 2 éléments, correspondant à 2 poteaux du jeu.
         # Le poteau qu'on éliminera sera celui contenant le petit disque.
@@ -708,73 +704,70 @@ class TurnDisplayer():
 
 # --- Les fonctions qui coordonnent tout l'ensemble. ---
 
-def solveFullGame(nbChip):
-    """ Fonction résolvant entièrement un jeu de tour de Hanoï, tout en affichant
+def solve_full_game(nb_chip):
+    """
+    Résout entièrement un jeu de tour de Hanoï, tout en affichant
     la succession des coups joués, et la situation de jeu entre chaque coup.
-    nbChip est un entier strictement positif, indiquant le nombre de disques présents
-    initialement sur le poteau de départ.
-    Type MVC : Contrôleur """
+    :param nb_chip: int > 0. Nombre de disques présents initialement sur le poteau de départ.
+    """
 
     # Création du jeu, avec les poteaux et les disques dessus.
-    hanoi_game = HanoiGame(nbChip)
-
-    # Initialisation des classes de Vue, qui afficheront la situation du jeu et la
+    hanoi_game = HanoiGame(nb_chip)
+    # Initialisation des classes de vue, qui afficheront la situation du jeu et la
     # description des coups joués.
-    masts = (hanoi_game.mast_start, hanoi_game.mast_interm, hanoi_game.mast_end)
+    masts = hanoi_game.get_masts()
     masts_displayer = MastsDisplayer(masts)
-    turnDisplayer = TurnDisplayer()
+    turn_displayer = TurnDisplayer()
+    # Booléen indiquant si le jeu est fini ou pas.
+    game_in_progress = True
 
-    # Booléen à la con
-    gameNotFinished = True
-
-    while gameNotFinished:
+    while game_in_progress:
 
         # On affiche la situation de jeu actuel. Les 3 poteaux, avec la disposition des disques.
         masts_displayer.display()
         # Création de la classe résolvant le jeu.
-        hanoiSolver = HanoiSolver(hanoi_game)
+        hanoi_solver = HanoiSolver(hanoi_game)
         # Utilisation de cette classe pour déterminer le prochain coup à jouer,
         # en se basant uniquement sur la situation de jeu actuelle.
-        movementInfo = hanoiSolver.determine_next_movement()
+        movement_info = hanoi_solver.determine_next_movement()
 
-        if movementInfo is None:
+        if movement_info is None:
             # Pas d'info valide concernant le prochain coup à jouer.
             # Ca veut dire que le jeu est fini, les disques sont bien rangés sur le poteau de fin.
             print("C'est fini !!")
-            # On peut se casser de la boucle.
-            gameNotFinished = False
-
+            # On peut partir de la boucle.
+            game_in_progress = False
         else:
             # Les infos concernant le prochain coup à jouer sont valides. On les décompose.
-            (nb_gaps, moveType, mast_source, mast_dest) = movementInfo
+            (nb_gaps, move_type, mast_source, mast_dest) = movement_info
             # Affichage de la description du coup à jouer.
-            turnDisplayer.display(nb_gaps, moveType, mast_source, mast_dest)
-            # On effectue le déplacement d'un disque, selon ce qu'a déduit le hanoiSolver.
+            turn_displayer.display(nb_gaps, move_type, mast_source, mast_dest)
+            # On effectue le déplacement d'un disque, selon ce qu'a déduit le hanoi_solver.
             hanoi_game.move_chip(mast_source, mast_dest)
 
-        # On détruit le hanoiSolver. On en recrééra un autre à la prochaine itération.
-        # Ca permet d'être vraiment sûr qu'on ne retient aucune info entre deux coups à jouer.
-        del hanoiSolver
+        # On détruit le hanoi_solver. On en recrééra un autre à la prochaine itération.
+        # C'est inutile, mais ça sert à prouver qu'on ne retient aucune info entre deux coups.
+        del hanoi_solver
 
 
 def main():
     """
-    Programme principal, comme son nom l'indique. Captain Obvious, oui.
-    Faut essayer un jeu avec un nombre de disque pair, et un autre avec un nombre impair,
-    car les deux cas sont pas tout à fait pareil. (le mouvement du petit disque est pas le même)
+    Programme principal. Captain Obvious, oui.
+    Pour couvrir le plus de cas possible, il faut résoudre un jeu avec un nombre de disque pair,
+    et un autre avec un nombre impair. Ces deux cas sont pas tout à fait pareil,
+    le mouvement du petit disque n'est pas le même.
     """
 
-    print("="*79)
-    print("Les tours de Hanoi avec 3 disques")
-    print("="*79)
-    solveFullGame(3)
+    print('=' * 79)
+    print('Les tours de Hanoi avec 3 disques')
+    print('=' * 79)
+    solve_full_game(3)
 
-    print("="*79)
-    print("Les tours de Hanoi avec 4 disques")
-    print("="*79)
-    solveFullGame(4)
+    print('=' * 79)
+    print('Les tours de Hanoi avec 4 disques')
+    print('=' * 79)
+    solve_full_game(4)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
-
