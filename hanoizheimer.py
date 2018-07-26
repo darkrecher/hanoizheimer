@@ -42,19 +42,19 @@ On compte les coupures en partant du plus gros disque vers le plus petit
 Total : 3 coupures.
 
  * Si le nombre de coupures est impair, il faut déplacer le disque 1 (le petit).
-    Il reste à déterminer où déplacer ce petit disque.
-    Si le nombre total de disque est pair, le petit disque doit se déplacer vers l'avant :
-    poteau de départ -> poteau intermédiaire -> poteau de fin -> poteau de départ -> etc.
-    Si le nombre total de disque est impair, il doit se déplacer vers l'arrière :
-    poteau de fin -> poteau intermédiaire -> poteau de départ -> poteau de fin -> etc.
+   Pour déterminer son poteau de destination :
+    - Si le nombre total de disque est pair, le petit disque doit se déplacer vers l'avant :
+      poteau de départ -> poteau intermédiaire -> poteau de fin -> poteau de départ -> etc.
+    - Si le nombre total de disque est impair, il doit se déplacer vers l'arrière :
+      poteau de fin -> poteau intermédiaire -> poteau de départ -> poteau de fin -> etc.
 
  * Si le nombre de coupures est pair, il faut déplacer un disque autre que le petit disque.
-    Dans ce cas, il n'y a toujours qu'un seul mouvement possible.
-     - Parmi les deux poteaux ne contenant pas le petit disque, l'un d'eux est vide.
-        Il faut alors déplacer un disque du poteau non vide vers le poteau vide.
-     - Parmi les deux poteaux ne contenant pas le petit disque, aucun n'est vide.
-        Il faut prendre le plus petit disque parmi les deux poteaux,
-        et le déplacer sur l'autre poteau.
+   Dans ce cas, il n'y a toujours qu'un seul mouvement possible.
+    - Parmi les deux poteaux ne contenant pas le petit disque, l'un d'eux est vide.
+      Il faut alors déplacer un disque du poteau non vide vers le poteau vide.
+    - Parmi les deux poteaux ne contenant pas le petit disque, aucun n'est vide.
+      Il faut prendre le plus petit disque parmi ces deux poteaux,
+      et le déplacer vers l'autre.
 
 Lorsque le nombre de coupures est 0, le jeu est terminé. Tous les disques sont
 sur le poteau de fin, dans le bon ordre.
@@ -69,19 +69,17 @@ Vocabulaire (pour le nommage des variables et des objets) :
 chip : un disque posé sur l'un des poteaux du jeu.
 size : taille d'un disque. Elle varie de 1 jusqu'au nombre total de disque dans le jeu.
 tiny_chip : le plus petit disque (avec une taille de 1).
-mast : poteau, mât, l'une des tour de Hanoï.
+mast : poteau, mât, l'une des tours de Hanoï.
 
 mast_start : le poteau de départ, celui sur lequel tous les disques sont placés au début du jeu.
 mast_interm : le poteau intermédiaire.
 mast_end : le poteau de fin, celui sur lequel tous les disques doivent se trouver à la fin du jeu.
 
-mast_source : le poteau de source, pour le coup à jouer en cours.
-              (Celui à partir duquel on prend un disque)
-mast_dest : le poteau de destination, pour le coup à jouer en cours.
-            (Celui sur lequel on pose le disque qu'on a pris sur le mast_source)
+mast_source : le poteau de source, pour le coup à jouer en cours. (On y prend un disque).
+mast_dest : le poteau de destination, pour le coup à jouer en cours. (On y pose le disque pris).
 
-move, turn : un mouvement = un coup = déplacement d'un disque d'un poteau vers un autre.
-gap : une coupure dans l'ordre des disques
+move, turn : un mouvement = un coup = un déplacement d'un disque d'un poteau vers un autre.
+gap : une coupure dans la disposition des disques (voir plus haut).
 """
 
 from enum import Enum
