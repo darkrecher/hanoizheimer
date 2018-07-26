@@ -1,0 +1,256 @@
+===============================================================================
+Les tours de Hanoi avec 3 disques
+===============================================================================
+   |         |         |   
+  +++        |         |   
+ -----       |         |   
++++++++      |         |   
+...........................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'arriere
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+   |         |         |   
+   |         |         |   
+ -----       |         |   
++++++++      |        +++  
+...........................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau intermediaire (au milieu)
+   |         |         |   
+   |         |         |   
+   |         |         |   
++++++++    -----      +++  
+...........................
+
+Nombre de coupures dans l'ordre des disques : 3
+Type de mouvement : Le petit disque, vers l'arriere
+Poteau source         : poteau de fin (a droite)
+Poteau de destination : poteau intermediaire (au milieu)
+   |         |         |   
+   |         |         |   
+   |        +++        |   
++++++++    -----       |   
+...........................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+   |         |         |   
+   |         |         |   
+   |        +++        |   
+   |       -----    +++++++
+...........................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'arriere
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de depart (a gauche)
+   |         |         |   
+   |         |         |   
+   |         |         |   
+  +++      -----    +++++++
+...........................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de fin (a droite)
+   |         |         |   
+   |         |         |   
+   |         |       ----- 
+  +++        |      +++++++
+...........................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'arriere
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+   |         |         |   
+   |         |        +++  
+   |         |       ----- 
+   |         |      +++++++
+...........................
+
+C'est fini !!
+===============================================================================
+Les tours de Hanoi avec 4 disques
+===============================================================================
+    |           |           |    
+   +++          |           |    
+  -----         |           |    
+ +++++++        |           |    
+---------       |           |    
+.................................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau intermediaire (au milieu)
+    |           |           |    
+    |           |           |    
+  -----         |           |    
+ +++++++        |           |    
+---------      +++          |    
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+ +++++++        |           |    
+---------      +++        -----  
+.................................
+
+Nombre de coupures dans l'ordre des disques : 3
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+ +++++++        |          +++   
+---------       |         -----  
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau intermediaire (au milieu)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+    |           |          +++   
+---------    +++++++      -----  
+.................................
+
+Nombre de coupures dans l'ordre des disques : 3
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau de fin (a droite)
+Poteau de destination : poteau de depart (a gauche)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+   +++          |           |    
+---------    +++++++      -----  
+.................................
+
+Nombre de coupures dans l'ordre des disques : 4
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de fin (a droite)
+Poteau de destination : poteau intermediaire (au milieu)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+   +++        -----         |    
+---------    +++++++        |    
+.................................
+
+Nombre de coupures dans l'ordre des disques : 3
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau intermediaire (au milieu)
+    |           |           |    
+    |           |           |    
+    |          +++          |    
+    |         -----         |    
+---------    +++++++        |    
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |          +++          |    
+    |         -----         |    
+    |        +++++++    ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+    |         -----        +++   
+    |        +++++++    ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de depart (a gauche)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+    |           |          +++   
+  -----      +++++++    ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 3
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau de fin (a droite)
+Poteau de destination : poteau de depart (a gauche)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+   +++          |           |    
+  -----      +++++++    ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+   +++          |        +++++++ 
+  -----         |       ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau intermediaire (au milieu)
+    |           |           |    
+    |           |           |    
+    |           |           |    
+    |           |        +++++++ 
+  -----        +++      ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 2
+Type de mouvement : Un disque autre que le petit disque
+Poteau source         : poteau de depart (a gauche)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |           |    
+    |           |         -----  
+    |           |        +++++++ 
+    |          +++      ---------
+.................................
+
+Nombre de coupures dans l'ordre des disques : 1
+Type de mouvement : Le petit disque, vers l'avant
+Poteau source         : poteau intermediaire (au milieu)
+Poteau de destination : poteau de fin (a droite)
+    |           |           |    
+    |           |          +++   
+    |           |         -----  
+    |           |        +++++++ 
+    |           |       ---------
+.................................
+
+C'est fini !!
