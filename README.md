@@ -56,11 +56,9 @@ Or, with python :
 
 This code will print, on the standard output, the solution for a 6-discs game.
 
-### Algorithme
+### Algorithm
 
-See docstring in the file `hanoizheimer.py`.
-
-French only.
+See docstring in the file `hanoizheimer.py`. French only, sorry.
 
 ### License
 
